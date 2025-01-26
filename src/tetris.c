@@ -21,22 +21,22 @@
 #define COLUMNS (SCREEN_WIDTH / BLOCK_SIZE)
 
 int L_shape_left[SHAPE_SIZE][SHAPE_SIZE] = {
-    {0, 0, 1, 0},
-    {0, 0, 1, 0},
-    {0, 1, 1, 0},
+    {0, 0, 4, 0},
+    {0, 0, 4, 0},
+    {0, 4, 4, 0},
     {0, 0, 0, 0},
 };
 
 int L_shape_right[SHAPE_SIZE][SHAPE_SIZE] = {
-    {0, 1, 0, 0},
-    {0, 1, 0, 0},
-    {0, 1, 1, 0},
+    {0, 2, 0, 0},
+    {0, 2, 0, 0},
+    {0, 2, 2, 0},
     {0, 0, 0, 0},
 };
 int Z_shape_left[SHAPE_SIZE][SHAPE_SIZE] = {
     {0, 0, 0, 0},
-    {0, 0, 1, 1},
-    {0, 1, 1, 0},
+    {0, 0, 3, 3},
+    {0, 3, 3, 0},
     {0, 0, 0, 0},
 };
 
@@ -48,33 +48,30 @@ int Z_shape_right[SHAPE_SIZE][SHAPE_SIZE] = {
 };
 int T_shape[SHAPE_SIZE][SHAPE_SIZE] = {
     {0, 0, 0, 0},
-    {0, 1, 1, 1},
-    {0, 0, 1, 0},
+    {0, 6, 6, 6},
+    {0, 0, 6, 0},
     {0, 0, 0, 0},
 };
 int Box_shape[SHAPE_SIZE][SHAPE_SIZE] = {
     {0, 0, 0, 0},
-    {0, 1, 1, 0},
-    {0, 1, 1, 0},
+    {0, 5, 5, 0},
+    {0, 5, 5, 0},
     {0, 0, 0, 0},
 };
 int I_shape[SHAPE_SIZE][SHAPE_SIZE] = {
-    {0, 0, 1, 0},
-    {0, 0, 1, 0},
-    {0, 0, 1, 0},
-    {0, 0, 1, 0},
+    {0, 0, 7, 0},
+    {0, 0, 7, 0},
+    {0, 0, 7, 0},
+    {0, 0, 7, 0},
 };
 
 int global_matrix[ROWS][COLUMNS] = {0};
 
 struct Tetris_block {
     int (*shape)[4];
-    int color;
     int y_pos;
     int x_pos;
 };
-
-
 
 void drawBlock(SDL_Renderer *ren, int x, int y, int color);
 void renderAll(SDL_Renderer *ren, struct Tetris_block *block);
@@ -135,9 +132,7 @@ int main(int argc, char *argv[]) {
             if(checkCollision(&block)) {
                 updateGlobalMatrix(&block);
                 createBlock(&block);
-                // Delete current block and create new.
-                // Check for clearing.
-                // Add points etc.
+                clearRows();
             } else {
                 block.y_pos++;
             }
@@ -158,59 +153,41 @@ int main(int argc, char *argv[]) {
 void updateGlobalMatrix(struct Tetris_block *block) {
     for (int i = 0; i < SHAPE_SIZE; i++) {
         for (int j = 0; j < SHAPE_SIZE; j++) {
-            if (block->shape[i][j] == 1) {
-                if (block->color == RED) {
-                    global_matrix[block->y_pos + i][block->x_pos + j] = RED;
-                }
-                else if (block->color == GREEN) {
-                    global_matrix[block->y_pos + i][block->x_pos + j] = GREEN;
-                }
-                else if (block->color == BLUE) {
-                    global_matrix[block->y_pos + i][block->x_pos + j] = BLUE;
-                }
-                else if (block->color == YELLOW) {
-                    global_matrix[block->y_pos + i][block->x_pos + j] = YELLOW;
-                }
-                else if (block->color == ORANGE) {
-                    global_matrix[block->y_pos + i][block->x_pos + j] = ORANGE;
-                }
-                else if (block->color == PURPLE) {
-                    global_matrix[block->y_pos + i][block->x_pos + j] = PURPLE;
-                }
-                else if (block->color == CYAN) {
-                    global_matrix[block->y_pos + i][block->x_pos + j] = CYAN;
-                }
-                else {
-                    global_matrix[block->y_pos + i][block->x_pos + j] = WHITE;
-                }
+            if (block->shape[i][j] > 0) {
+                int global_y = block->y_pos + i;
+                int global_x = block->x_pos + j;
+                global_matrix[global_y][global_x] = block->shape[i][j];
             }
         }
     }
 }
 
 void setColor(SDL_Renderer *ren, int color) {
-    if (color == GREEN) {
-        SDL_SetRenderDrawColor(ren, 0, 255, 0, 255);
-    }
-    else if (color == RED) {
-        SDL_SetRenderDrawColor(ren, 255, 0, 0, 255);
-    }
-    else if (color == BLUE) {
-        SDL_SetRenderDrawColor(ren, 0, 0, 255, 255);
-    }
-    else if (color == CYAN) {
-        SDL_SetRenderDrawColor(ren, 0, 255, 255, 255);
-    }
-    else if (color == YELLOW) {
-        SDL_SetRenderDrawColor(ren, 255, 255, 0, 255);
-    }
-    else if (color == ORANGE) {
-        SDL_SetRenderDrawColor(ren, 255, 128, 0, 255);
-    }
-    else if (color == PURPLE) {
-        SDL_SetRenderDrawColor(ren, 255, 0, 255, 255);
-    } else {
-        SDL_SetRenderDrawColor(ren, 255, 255, 255, 255); // Else White
+    switch (color) {
+        case GREEN:
+            SDL_SetRenderDrawColor(ren, 0, 255, 0, 255);
+            break;
+        case RED:
+            SDL_SetRenderDrawColor(ren, 255, 0, 0, 255);
+            break;
+        case BLUE:
+            SDL_SetRenderDrawColor(ren, 0, 0, 255, 255);
+            break;
+        case CYAN:
+            SDL_SetRenderDrawColor(ren, 0, 255, 255, 255);
+            break;
+        case YELLOW:
+            SDL_SetRenderDrawColor(ren, 255, 255, 0, 255);
+            break;
+        case ORANGE:
+            SDL_SetRenderDrawColor(ren, 255, 128, 0, 255);
+            break;
+        case PURPLE:
+            SDL_SetRenderDrawColor(ren, 255, 0, 255, 255);
+            break;
+        default:
+            SDL_SetRenderDrawColor(ren, 255, 255, 255, 255);
+            break;
     }
 }
 
@@ -219,11 +196,17 @@ void setColor(SDL_Renderer *ren, int color) {
 bool checkCollision(struct Tetris_block *block) {
     for (int i = 0; i < SHAPE_SIZE; i++) {
         for (int j = 0; j < SHAPE_SIZE; j++) {
-            if (block->shape[i][j] == 1) {
+            if (block->shape[i][j] > 0) {
                 int global_y = block->y_pos + i;
                 int global_x = block->x_pos + j;
-                // new_y is the global y-location for the square inside the tetris-block. If there is a block underneeth(+1 row) it will return true.
+                
+                // Check collision with blocks.
                 if (global_y == ROWS-1 || global_matrix[global_y + 1][global_x] > 0) {
+                    return true;
+                }
+
+                // Check collision with walls.
+                if (global_x < 0 || global_x >= COLUMNS || global_y >= ROWS) {
                     return true;
                 }
             }
@@ -233,8 +216,8 @@ bool checkCollision(struct Tetris_block *block) {
 }
 
 void rotateBlock(struct Tetris_block *block) {
+    // Rotation algorithm 
     int rotatedBlock[SHAPE_SIZE][SHAPE_SIZE] = {0};
-    // First, switch rows and columns.
     for (int i = 0; i < SHAPE_SIZE; i++) {
         for (int j = 0; j < SHAPE_SIZE; j++) {
             rotatedBlock[j][i] = block->shape[i][j];
@@ -245,6 +228,8 @@ void rotateBlock(struct Tetris_block *block) {
             block->shape[i][j] = rotatedBlock[i][SHAPE_SIZE - 1 - j];
         }
     }
+
+    // Check here if it can rotate within the matrix.
     
 }
 
@@ -253,29 +238,39 @@ void createBlock(struct Tetris_block *block) {
     I_shape, L_shape_left, L_shape_right, 
     Z_shape_left, Z_shape_right, T_shape, Box_shape
     };
-
-    int shapeColors[7] = {
-        CYAN,      // Färg för I_shape
-        ORANGE,    // Färg för L_shape_left
-        BLUE,      // Färg för L_shape_right
-        RED,       // Färg för Z_shape_left
-        GREEN,     // Färg för Z_shape_right
-        PURPLE,    // Färg för T_shape
-        YELLOW     // Färg för Box_shape
-    };
-    
+  
     int randomIndex = rand() % 7;
 
     block->shape = shapes[randomIndex];
     block->x_pos = (COLUMNS / 2) - 2;
-    block->y_pos = 0;                
-    block->color = shapeColors[randomIndex];
+    block->y_pos = 0;
 }
 
 void clearRows() {
+    // Clear full rows.
     for (int i = 0; i < ROWS; i++) {
+        bool isFull = true;
         for (int j = 0; j < COLUMNS; j++) {
-            
+            if(global_matrix[i][j] < 1) {
+                isFull = false;
+            }
+        }
+    
+        if (isFull) {
+            // Clear full row.
+            for (int j = 0; j < COLUMNS; j++) {
+                global_matrix[i][j] = 0;
+            }
+            // Move down rows.
+            for (int row = i; row > 0; row--) { 
+                for (int col = 0; col < COLUMNS; col++) {
+                    global_matrix[row][col] = global_matrix[row - 1][col];
+                }
+            }
+            // Empty first row.
+            for (int j = 0; j < COLUMNS; j++) {
+                global_matrix[0][j] = 0;
+            }
         }
     }
 }
@@ -288,14 +283,14 @@ void renderAll(SDL_Renderer *ren, struct Tetris_block *block){
     // Draw falling block
     for (int i = 0; i < SHAPE_SIZE; i++) {
         for (int j = 0; j < SHAPE_SIZE; j++) {
-            if (block->shape[i][j] == 1) {
+            if (block->shape[i][j] > 0) {
                 SDL_Rect rect = {
                     (block->x_pos + j) * BLOCK_SIZE,
                     (block->y_pos + i) * BLOCK_SIZE, 
                     BLOCK_SIZE, 
                     BLOCK_SIZE
                 };
-                setColor(ren, block->color);
+                setColor(ren, block->shape[i][j]);
                 SDL_RenderFillRect(ren, &rect);
                 SDL_SetRenderDrawColor(ren, 0, 0, 0, 255); // Black.
                 SDL_RenderDrawRect(ren, &rect);
@@ -326,17 +321,29 @@ void renderAll(SDL_Renderer *ren, struct Tetris_block *block){
 
 void handleInput(SDL_Event *event, struct Tetris_block *block) {
     if (event->type == SDL_KEYDOWN) {
-        if (event->key.keysym.sym == SDLK_LEFT) {
-            block->x_pos--;
+
+        int last_x = block->x_pos;
+        int last_y = block->y_pos;
+
+        switch (event->key.keysym.sym) {
+            case SDLK_LEFT:
+                block->x_pos--;
+                break;
+            case SDLK_RIGHT:
+                block->x_pos++;
+                break;
+            case SDLK_DOWN:
+                //block->y_pos+=2;
+                break;
+            case SDLK_UP:
+                rotateBlock(block);
+                break;
+            default:
+                break;
         }
-        if (event->key.keysym.sym == SDLK_RIGHT) {
-            block->x_pos++;
-        }
-        if (event->key.keysym.sym == SDLK_DOWN) {
-            // Hard hit function. (iterate ypos++ until collision.)
-        }
-        if (event->key.keysym.sym == SDLK_UP) {
-            rotateBlock(block);
+        if (checkCollision(block)) {
+            block->x_pos = last_x;
+            block->y_pos = last_y;
         }
     }
 }
